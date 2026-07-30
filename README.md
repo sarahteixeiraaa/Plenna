@@ -1,88 +1,127 @@
-# Plenna v1.2 — Sarah Teixeira
+# Plenna v1.3 — Agenda e Reuniões
 
-Central operacional para social media e storymaker, construída com Next.js, React, TypeScript e Supabase.
+Atualização incremental da Plenna para Sarah Teixeira. Este pacote contém **somente arquivos novos ou alterados** em relação à v1.2.
 
-## Novidades desta versão
+## O que foi adicionado
 
-- Briefing público por link exclusivo;
-- Questionário em cinco pilares;
-- Salvamento automático;
-- Progresso e status;
-- Workspace de respostas;
-- Roteiro de onboarding de 45 minutos;
-- Checklist de materiais e acessos;
-- Resumo estratégico;
-- Documento pronto para imprimir ou salvar em PDF.
+### Agenda funcional
 
-## 1. Atualizar o projeto
+- Cadastro, edição e exclusão de compromissos;
+- Vínculo opcional com clientes;
+- Tipos: reunião, gravação, evento, prazo e compromisso interno;
+- Status: agendado, confirmado, concluído e cancelado;
+- Visualização mensal e em lista;
+- Filtros por tipo e campo de busca;
+- Painel dos compromissos do dia;
+- Marcação rápida como concluído;
+- Funcionamento com Supabase e no modo demonstração.
 
-Substitua os arquivos do repositório atual pelos arquivos desta pasta e envie as alterações ao GitHub. A Vercel deverá iniciar um novo deploy automaticamente.
+### Gestão de reuniões
 
-## 2. Atualizar o Supabase
+- Reuniões compartilhadas com a Agenda;
+- Pauta organizada por itens;
+- Anotações;
+- Registro de decisões;
+- Próximos passos com responsável e prazo;
+- Marcação de pendências concluídas;
+- Link do Google Meet, Zoom ou outro canal;
+- Histórico de reuniões concluídas.
 
-Como a versão 1.1 já está funcionando, abra o **SQL Editor** do Supabase e execute somente:
+### Google Agenda
+
+Cada compromisso pode:
+
+- Abrir o Google Agenda com os dados já preenchidos;
+- Gerar um arquivo `.ics` compatível com Google Agenda, Outlook e Apple Calendar.
+
+Esta versão usa uma integração leve, sem credenciais adicionais. Ela **não realiza sincronização automática em duas vias** e não cria links do Google Meet automaticamente.
+
+---
+
+## Como instalar
+
+### 1. Substitua e adicione os arquivos
+
+Copie o conteúdo deste pacote para a raiz do projeto, mantendo a mesma estrutura de pastas.
+
+Arquivos alterados:
 
 ```text
-supabase/plenna-v1.2.sql
+app/(app)/agenda/page.tsx
+app/(app)/reunioes/page.tsx
+app/globals.css
+README.md
+CHANGELOG.md
 ```
 
-O script cria a tabela `briefings`, as políticas de segurança e duas funções usadas pelo formulário público.
+Arquivos novos:
 
-Não é necessário alterar as variáveis existentes:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+```text
+components/calendar/AgendaManager.tsx
+components/calendar/ScheduleEventModal.tsx
+components/meetings/MeetingsManager.tsx
+lib/schedule.ts
+supabase/plenna-v1.3.sql
 ```
 
-## 3. Teste recomendado
+### 2. Atualize o Supabase
+
+No painel do Supabase, abra:
+
+```text
+SQL Editor → New query
+```
+
+Cole e execute apenas:
+
+```text
+supabase/plenna-v1.3.sql
+```
+
+O script cria a tabela `calendar_events`, índices, validações e políticas de segurança por usuário.
+
+### 3. Envie ao GitHub
+
+Faça o commit normalmente. A Vercel deverá iniciar um novo deploy automaticamente.
+
+Nenhuma variável de ambiente nova é necessária.
+
+---
+
+## Teste recomendado
 
 1. Entre na Plenna;
-2. Abra **Briefings**;
-3. Clique em **Criar briefing**;
-4. Selecione um cliente;
-5. Copie o link público;
-6. Abra o link em uma janela anônima;
-7. Preencha algumas respostas e atualize a página;
-8. Confirme que as respostas continuam salvas;
-9. Conclua o formulário;
-10. Volte à Plenna e abra o workspace do briefing;
-11. Teste reunião, checklist, resumo e **Gerar documento / PDF**.
+2. Abra **Agenda**;
+3. Cadastre uma reunião vinculada a um cliente;
+4. Atualize a página e confirme que ela continua salva;
+5. Abra **Reuniões** e confirme que o mesmo compromisso aparece;
+6. Adicione pauta, anotações, decisões e próximos passos;
+7. Marque uma pendência como concluída;
+8. Teste **Adicionar ao Google Agenda**;
+9. Baixe o arquivo `.ics`;
+10. Edite e exclua um compromisso de teste.
 
-## 4. Como salvar o documento em PDF
+---
 
-No workspace do briefing:
+## Formato dos próximos passos
 
-1. Abra **Resumo estratégico**;
-2. Complete ou revise os campos;
-3. Clique em **Gerar documento / PDF**;
-4. Na janela de impressão do navegador, escolha **Salvar como PDF**.
+No campo **Próximos passos**, use uma linha para cada tarefa:
 
-## 5. Segurança do link público
-
-O visitante não recebe acesso direto às tabelas do CRM. O formulário utiliza funções específicas do banco e um token UUID aleatório para buscar e salvar somente o briefing correspondente ao link.
-
-Não adicione uma chave `service_role` ao projeto ou à Vercel.
-
-## 6. Modo demonstração
-
-Sem as variáveis do Supabase, a Plenna continua funcionando com `localStorage`. Nesse modo, o link público funciona apenas no mesmo navegador em que o briefing foi criado.
-
-## 7. Comandos locais
-
-```bash
-npm install
-npm run dev
+```text
+Enviar fotos | Cliente | 2026-08-05
+Criar roteiros | Sarah | 2026-08-07
 ```
 
-Validação de TypeScript:
+A ordem é:
 
-```bash
-npm run lint
+```text
+Ação | Responsável | Data
 ```
 
-Build de produção:
+Os campos de responsável e data são opcionais.
 
-```bash
-npm run build
-```
+---
+
+## Segurança
+
+A tabela utiliza Row Level Security. Cada usuário autenticado acessa somente os próprios compromissos e só pode vinculá-los aos próprios clientes.

@@ -1,25 +1,34 @@
 # Changelog — Plenna
 
-## v1.2.0 — Briefing e Onboarding
+## v1.3 — Agenda e Reuniões
 
-- Criação de briefings vinculados aos clientes cadastrados.
-- Link público exclusivo para cada cliente.
-- Questionário estratégico dividido em cinco pilares.
-- Salvamento automático das respostas.
-- Indicador de progresso e status do preenchimento.
-- Painel com briefings pendentes, concluídos e revisados.
-- Workspace interno com todas as respostas organizadas por pilar.
-- Campo de anotações estratégicas da Sarah.
-- Roteiro interativo da reunião de onboarding de 45 minutos.
-- Checklist de materiais, documentos e acessos.
-- Resumo estratégico editável e preenchimento sugerido pelas respostas.
-- Documento diagramado para impressão ou exportação em PDF.
-- Funções públicas protegidas por token aleatório no Supabase.
-- Modo demonstração preservado para uso sem banco configurado.
+- Agenda conectada ao Supabase;
+- Criação, edição e exclusão de compromissos;
+- Calendário mensal e visualização em lista;
+- Filtros por tipo e busca;
+- Vínculo entre compromissos e clientes;
+- Tipos e status personalizados;
+- Gestão completa de reuniões;
+- Pautas, anotações e decisões;
+- Próximos passos com responsável, prazo e conclusão;
+- Abertura de eventos preenchidos no Google Agenda;
+- Exportação de arquivos `.ics`;
+- Persistência local no modo demonstração;
+- Nova tabela `calendar_events` com RLS no Supabase;
+- Melhorias de responsividade para celular e tablet.
 
-## v1.1.0 — CRM e Supabase
+## v1.2 — Briefing e Onboarding
 
-- Paleta com maior contraste.
-- Autenticação via Supabase.
-- Cadastro, edição, busca, filtros e exclusão de clientes.
-- Persistência local quando o Supabase não está configurado.
+- Link público de briefing;
+- Questionário em cinco pilares;
+- Salvamento automático;
+- Roteiro de onboarding;
+- Checklist de materiais;
+- Resumo estratégico e impressão em PDF.
+
+## v1.1 — CRM e Supabase
+
+- Login e proteção das páginas;
+- Cadastro, edição e exclusão de clientes;
+- Persistência no Supabase;
+- Revisão de contraste da identidade visual.
