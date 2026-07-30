@@ -1,26 +1,25 @@
-# Histórico de versões
+# Changelog — Plenna
 
-## v1.1 — Contraste, autenticação e CRM
+## v1.2.0 — Briefing e Onboarding
 
-- Paleta visual reforçada;
-- Mais contraste em textos, cartões, botões, filtros e status;
-- Nova tela de login;
-- Login e logout com Supabase;
-- Recuperação de senha;
-- Proteção das rotas internas;
-- CRM de clientes com cadastro, edição, exclusão, busca e filtros;
-- Persistência no Supabase com Row Level Security;
-- Modo demonstração com armazenamento local;
-- Arquivo SQL e guia de configuração para Vercel.
+- Criação de briefings vinculados aos clientes cadastrados.
+- Link público exclusivo para cada cliente.
+- Questionário estratégico dividido em cinco pilares.
+- Salvamento automático das respostas.
+- Indicador de progresso e status do preenchimento.
+- Painel com briefings pendentes, concluídos e revisados.
+- Workspace interno com todas as respostas organizadas por pilar.
+- Campo de anotações estratégicas da Sarah.
+- Roteiro interativo da reunião de onboarding de 45 minutos.
+- Checklist de materiais, documentos e acessos.
+- Resumo estratégico editável e preenchimento sugerido pelas respostas.
+- Documento diagramado para impressão ou exportação em PDF.
+- Funções públicas protegidas por token aleatório no Supabase.
+- Modo demonstração preservado para uso sem banco configurado.
 
-## v1.0 — Protótipo navegável
+## v1.1.0 — CRM e Supabase
 
-- Dashboard;
-- Agenda;
-- Clientes demonstrativos;
-- Conteúdos;
-- Briefings;
-- Reuniões;
-- Storymaker;
-- Arquivos;
-- Configurações.
+- Paleta com maior contraste.
+- Autenticação via Supabase.
+- Cadastro, edição, busca, filtros e exclusão de clientes.
+- Persistência local quando o Supabase não está configurado.

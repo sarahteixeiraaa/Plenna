@@ -34,8 +34,9 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthPage = path.startsWith("/login") || path.startsWith("/redefinir-senha") || path.startsWith("/auth/");
+  const isPublicBriefing = path.startsWith("/briefing/");
 
-  if (!user && !isAuthPage) {
+  if (!user && !isAuthPage && !isPublicBriefing) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", path);

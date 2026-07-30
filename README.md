@@ -1,111 +1,88 @@
-# Plenna v1.1
+# Plenna v1.2 — Sarah Teixeira
 
-Central operacional para **Sarah Teixeira — Social Media & Storymaker**.
+Central operacional para social media e storymaker, construída com Next.js, React, TypeScript e Supabase.
 
-## Novidades desta edição
+## Novidades desta versão
 
-- Paleta com mais contraste e profundidade;
-- Login por e-mail e senha com Supabase;
-- Recuperação de senha;
-- Proteção das páginas internas;
-- CRM de clientes funcional;
-- Cadastro, edição, exclusão, busca e filtros;
-- Salvamento real no Supabase;
-- Modo demonstração com persistência no navegador enquanto o Supabase não estiver conectado;
-- Banco protegido por Row Level Security: cada usuário acessa apenas os próprios clientes.
+- Briefing público por link exclusivo;
+- Questionário em cinco pilares;
+- Salvamento automático;
+- Progresso e status;
+- Workspace de respostas;
+- Roteiro de onboarding de 45 minutos;
+- Checklist de materiais e acessos;
+- Resumo estratégico;
+- Documento pronto para imprimir ou salvar em PDF.
 
-## Executar localmente
+## 1. Atualizar o projeto
 
-Requisitos: **Node.js 22 ou superior**.
+Substitua os arquivos do repositório atual pelos arquivos desta pasta e envie as alterações ao GitHub. A Vercel deverá iniciar um novo deploy automaticamente.
+
+## 2. Atualizar o Supabase
+
+Como a versão 1.1 já está funcionando, abra o **SQL Editor** do Supabase e execute somente:
+
+```text
+supabase/plenna-v1.2.sql
+```
+
+O script cria a tabela `briefings`, as políticas de segurança e duas funções usadas pelo formulário público.
+
+Não é necessário alterar as variáveis existentes:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
+```
+
+## 3. Teste recomendado
+
+1. Entre na Plenna;
+2. Abra **Briefings**;
+3. Clique em **Criar briefing**;
+4. Selecione um cliente;
+5. Copie o link público;
+6. Abra o link em uma janela anônima;
+7. Preencha algumas respostas e atualize a página;
+8. Confirme que as respostas continuam salvas;
+9. Conclua o formulário;
+10. Volte à Plenna e abra o workspace do briefing;
+11. Teste reunião, checklist, resumo e **Gerar documento / PDF**.
+
+## 4. Como salvar o documento em PDF
+
+No workspace do briefing:
+
+1. Abra **Resumo estratégico**;
+2. Complete ou revise os campos;
+3. Clique em **Gerar documento / PDF**;
+4. Na janela de impressão do navegador, escolha **Salvar como PDF**.
+
+## 5. Segurança do link público
+
+O visitante não recebe acesso direto às tabelas do CRM. O formulário utiliza funções específicas do banco e um token UUID aleatório para buscar e salvar somente o briefing correspondente ao link.
+
+Não adicione uma chave `service_role` ao projeto ou à Vercel.
+
+## 6. Modo demonstração
+
+Sem as variáveis do Supabase, a Plenna continua funcionando com `localStorage`. Nesse modo, o link público funciona apenas no mesmo navegador em que o briefing foi criado.
+
+## 7. Comandos locais
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abra `http://localhost:3000`.
+Validação de TypeScript:
 
-Sem variáveis de ambiente, a Plenna entra automaticamente no **modo demonstração**. Os clientes cadastrados ficam salvos no `localStorage` do navegador.
-
-## Ativar Supabase e login real
-
-### 1. Criar o projeto
-
-Crie um projeto no Supabase.
-
-### 2. Criar a tabela e as regras de segurança
-
-No painel do Supabase, abra **SQL Editor**, copie todo o conteúdo de:
-
-```text
-supabase/plenna.sql
+```bash
+npm run lint
 ```
 
-Execute o script.
+Build de produção:
 
-### 3. Criar a conta da Sarah
-
-No Supabase:
-
-1. Abra **Authentication > Users**;
-2. Clique em **Add user**;
-3. Informe o e-mail da Sarah;
-4. Defina uma senha inicial;
-5. Marque o e-mail como confirmado, caso a opção esteja disponível.
-
-### 4. Configurar as variáveis
-
-Copie `.env.example` para `.env.local` e preencha:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://SEU-PROJETO.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sua-chave-publicavel
+```bash
+npm run build
 ```
-
-No painel atual do Supabase, a chave pode aparecer como **Publishable key**. Em projetos antigos, a chave pública pode aparecer como **anon key**; use apenas a chave pública, nunca a `service_role`.
-
-### 5. Configurar na Vercel
-
-No projeto da Vercel:
-
-1. Abra **Settings > Environment Variables**;
-2. Cadastre as duas variáveis acima;
-3. Aplique em Production, Preview e Development;
-4. Faça um novo deploy.
-
-### 6. Configurar recuperação de senha
-
-No Supabase, abra **Authentication > URL Configuration**:
-
-- Defina o endereço publicado na Vercel como **Site URL**;
-- Adicione `https://SEU-DOMINIO/auth/callback` e `https://SEU-DOMINIO/redefinir-senha` em **Redirect URLs**.
-
-## Fluxo da área de clientes
-
-Acesse **Clientes** para:
-
-- Cadastrar uma conta;
-- Informar responsável e contatos;
-- Registrar plano e mensalidade;
-- Definir status;
-- Acompanhar percentual de organização;
-- Registrar a próxima ação;
-- Editar ou excluir o cadastro;
-- Buscar por nome, segmento, responsável ou Instagram.
-
-## Segurança
-
-- As páginas internas são protegidas pelo `proxy.ts` quando o Supabase está configurado;
-- O banco utiliza Row Level Security;
-- A chave `service_role` não deve ser adicionada ao front-end ou à Vercel;
-- Senhas não são armazenadas no código da Plenna.
-
-## Publicar a atualização
-
-Substitua os arquivos do repositório pela nova versão ou envie as alterações para uma branch. Depois, faça o deploy pela Vercel.
-
-## Identidade
-
-- Nome: **Plenna**
-- Slogan: **Sua operação criativa em um só lugar.**
-- Responsável: **Sarah Teixeira**
