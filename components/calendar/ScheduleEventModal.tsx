@@ -179,7 +179,7 @@ export default function ScheduleEventModal({
             <label>Pauta<textarea value={agenda} onChange={(inputEvent) => setAgenda(inputEvent.target.value)} rows={4} placeholder={"Resultados do mês\nPrioridades do próximo ciclo\nCalendário editorial"} /></label>
             <label>Anotações<textarea value={notes} onChange={(inputEvent) => setNotes(inputEvent.target.value)} rows={5} placeholder="Registre os principais pontos durante a reunião." /></label>
             <label>Decisões<textarea value={decisions} onChange={(inputEvent) => setDecisions(inputEvent.target.value)} rows={3} placeholder={"Campanha aprovada\nGravação definida para sexta-feira"} /></label>
-            <label>Próximos passos<textarea value={nextSteps} onChange={(inputEvent) => setNextSteps(inputEvent.target.value)} rows={4} placeholder={"Enviar fotos | Cliente | 2026-08-05\nCriar roteiros | Sarah | 2026-08-07"} /><small>Formato: ação | responsável | data</small></label>
+            <label>Próximos passos<textarea value={nextSteps} onChange={(inputEvent) => setNextSteps(inputEvent.target.value)} rows={4} placeholder={"Enviar fotos | Cliente | 2026-08-05\nCriar roteiros | Sarah | 2026-08-07"} /><small>Formato: ação | responsável | data. Aceita 2026-08-05 ou 05/08/2026.</small></label>
           </div>}
 
           {(localMessage || message) && <p className="form-message full-field schedule-form-message">{localMessage || message}</p>}

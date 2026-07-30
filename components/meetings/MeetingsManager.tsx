@@ -14,6 +14,7 @@ import {
   createDemoSchedule,
   dateKey,
   downloadIcs,
+  formatActionDueDate,
   formatDate,
   formatDuration,
   formatTime,
@@ -49,7 +50,7 @@ function meetingDateLabel(value: string) {
 }
 
 function actionLabel(action: MeetingAction) {
-  return [action.owner, action.due_date ? formatDate(`${action.due_date}T12:00:00`) : ""].filter(Boolean).join(" · ");
+  return [action.owner, action.due_date ? formatActionDueDate(action.due_date) : ""].filter(Boolean).join(" · ");
 }
 
 export default function MeetingsManager() {

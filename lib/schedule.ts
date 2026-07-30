@@ -62,12 +62,41 @@ export function dateKey(value: string | Date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+function safeDate(value: string | Date) {
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export function formatDate(value: string, options?: Intl.DateTimeFormatOptions) {
-  return new Intl.DateTimeFormat("pt-BR", options ?? { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
+  const date = safeDate(value);
+  if (!date) return "Data inválida";
+  return new Intl.DateTimeFormat("pt-BR", options ?? { day: "2-digit", month: "short", year: "numeric" }).format(date);
 }
 
 export function formatTime(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+  const date = safeDate(value);
+  if (!date) return "--:--";
+  return new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" }).format(date);
+}
+
+export function formatActionDueDate(value: string) {
+  const raw = value.trim();
+  if (!raw) return "";
+
+  const isoMatch = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  const brMatch = raw.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);
+
+  let date: Date | null = null;
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    date = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0);
+  } else if (brMatch) {
+    const [, day, month, year] = brMatch;
+    date = new Date(Number(year), Number(month) - 1, Number(day), 12, 0, 0);
+  }
+
+  if (!date || Number.isNaN(date.getTime())) return raw;
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(date);
 }
 
 export function formatDuration(startAt: string, endAt: string) {
