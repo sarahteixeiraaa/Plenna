@@ -30,7 +30,7 @@ function NavContent({ pathname, close }: { pathname: string; close?: () => void 
         <span className="nav-caption">ESPAÇO DE TRABALHO</span>
         {navigation.map(({ label, href, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
-          return <Link key={href} href={href} onClick={close} className={active ? "nav-link active" : "nav-link"}><Icon size={19}/><span>{label}</span>{label === "Conteúdos" && <em>4</em>}</Link>;
+          return <Link key={href} href={href} onClick={close} className={active ? "nav-link active" : "nav-link"}><Icon size={19}/><span>{label}</span></Link>;
         })}
       </nav>
       <div className="sidebar-bottom">
