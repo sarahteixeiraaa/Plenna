@@ -1,3 +1,5 @@
+import type { ApprovalStatus } from "@/lib/approval";
+
 export const CONTENT_STATUSES = ["Ideia", "Roteiro", "Gravação", "Edição", "Aprovação", "Agendado", "Publicado"] as const;
 export const CONTENT_FORMATS = ["Reel", "Carrossel", "Stories", "Post", "Live", "Outro"] as const;
 export const JOURNEY_STAGES = ["Atração", "Consideração", "Conversão", "Relacionamento"] as const;
@@ -35,12 +37,39 @@ export type ContentItem = {
   asset_url: string;
   notes: string;
   priority: ContentPriority;
+  approval_token: string;
+  approval_status: ApprovalStatus;
+  approval_due_date: string;
+  approval_requested_at: string;
+  approval_decided_at: string;
+  approval_reviewer_name: string;
+  approval_feedback: string;
   created_at: string;
   updated_at: string;
   clients: Omit<ContentClient, "id"> | null;
 };
 
-export type ContentPayload = Omit<ContentItem, "id" | "owner_id" | "created_at" | "updated_at" | "clients">;
+export type ContentPayload = Pick<
+  ContentItem,
+  | "client_id"
+  | "title"
+  | "content_format"
+  | "status"
+  | "pillar"
+  | "objective"
+  | "journey_stage"
+  | "hook"
+  | "script"
+  | "caption"
+  | "cta"
+  | "publication_date"
+  | "publication_time"
+  | "reference_url"
+  | "asset_url"
+  | "notes"
+  | "priority"
+  | "approval_due_date"
+>;
 
 export const emptyContentPayload: ContentPayload = {
   client_id: null,
@@ -60,7 +89,13 @@ export const emptyContentPayload: ContentPayload = {
   asset_url: "",
   notes: "",
   priority: "Média",
+  approval_due_date: "",
 };
+
+export function createApprovalToken() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `approval-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
 
 export function normalizeContent(value: Record<string, unknown>): ContentItem {
   const client = value.clients as Record<string, unknown> | null | undefined;
@@ -84,13 +119,22 @@ export function normalizeContent(value: Record<string, unknown>): ContentItem {
     asset_url: String(value.asset_url ?? ""),
     notes: String(value.notes ?? ""),
     priority: (value.priority as ContentPriority) ?? "Média",
+    approval_token: String(value.approval_token ?? ""),
+    approval_status: (value.approval_status as ApprovalStatus) ?? "Não enviado",
+    approval_due_date: String(value.approval_due_date ?? ""),
+    approval_requested_at: String(value.approval_requested_at ?? ""),
+    approval_decided_at: String(value.approval_decided_at ?? ""),
+    approval_reviewer_name: String(value.approval_reviewer_name ?? ""),
+    approval_feedback: String(value.approval_feedback ?? ""),
     created_at: String(value.created_at ?? new Date().toISOString()),
     updated_at: String(value.updated_at ?? new Date().toISOString()),
-    clients: client ? {
-      name: String(client.name ?? "Cliente"),
-      segment: String(client.segment ?? ""),
-      accent: String(client.accent ?? "#7B214B"),
-    } : null,
+    clients: client
+      ? {
+          name: String(client.name ?? "Cliente"),
+          segment: String(client.segment ?? ""),
+          accent: String(client.accent ?? "#7B214B"),
+        }
+      : null,
   };
 }
 
@@ -159,8 +203,8 @@ export function createDemoContents(clients: ContentClient[]): ContentItem[] {
     { title: "3 erros antes de prestar depoimento", content_format: "Reel", status: "Roteiro", pillar: "Educação jurídica", journey_stage: "Consideração", hook: "Recebeu uma intimação? Evite estes três erros.", publication_date: addDays(now, 1), priority: "Alta" },
     { title: "Bastidores da preparação do consultório", content_format: "Stories", status: "Gravação", pillar: "Humanização", journey_stage: "Relacionamento", publication_date: addDays(now, 2), priority: "Média" },
     { title: "Como escolher iluminação para ambientes", content_format: "Carrossel", status: "Edição", pillar: "Educação", journey_stage: "Consideração", publication_date: addDays(now, 4), priority: "Média" },
-    { title: "Menu executivo da semana", content_format: "Stories", status: "Aprovação", pillar: "Oferta", journey_stage: "Conversão", publication_date: addDays(now, 0), priority: "Alta" },
-    { title: "Investigação não é condenação", content_format: "Carrossel", status: "Agendado", pillar: "Educação jurídica", journey_stage: "Atração", publication_date: addDays(now, 5), priority: "Média" },
+    { title: "Menu executivo da semana", content_format: "Stories", status: "Aprovação", pillar: "Oferta", journey_stage: "Conversão", publication_date: addDays(now, 0), priority: "Alta", approval_status: "Aguardando", approval_due_date: addDays(now, 1) },
+    { title: "Investigação não é condenação", content_format: "Carrossel", status: "Agendado", pillar: "Educação jurídica", journey_stage: "Atração", publication_date: addDays(now, 5), priority: "Média", approval_status: "Aprovado" },
     { title: "Experiência da paciente", content_format: "Reel", status: "Publicado", pillar: "Prova social", journey_stage: "Conversão", publication_date: addDays(now, -2), priority: "Baixa" },
   ];
 
@@ -179,6 +223,13 @@ export function createDemoContents(clients: ContentClient[]): ContentItem[] {
       hook: example.hook ?? "",
       publication_date: example.publication_date ?? "",
       priority: example.priority ?? "Média",
+      approval_token: createApprovalToken(),
+      approval_status: example.approval_status ?? "Não enviado",
+      approval_due_date: example.approval_due_date ?? "",
+      approval_requested_at: example.approval_status === "Aguardando" ? nowIso : "",
+      approval_decided_at: example.approval_status === "Aprovado" ? nowIso : "",
+      approval_reviewer_name: example.approval_status === "Aprovado" ? "Cliente" : "",
+      approval_feedback: "",
       created_at: nowIso,
       updated_at: nowIso,
       clients: client ? { name: client.name, segment: client.segment, accent: client.accent } : null,

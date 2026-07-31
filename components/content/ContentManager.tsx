@@ -1,11 +1,13 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
-import { CalendarIcon, CloseIcon, MoreIcon, PlusIcon, SearchIcon } from "@/components/icons";
+import { CalendarIcon, CheckIcon, CloseIcon, FileIcon, MoreIcon, PlusIcon, SearchIcon, SparklesIcon } from "@/components/icons";
 import { clients as demoClientData } from "@/lib/data";
 import { createClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { ApprovalEvent, approvalPublicUrl, approvalStatusClass, formatApprovalDate, formatApprovalTimestamp } from "@/lib/approval";
 import {
   CONTENT_FORMATS,
   CONTENT_PRIORITIES,
@@ -18,6 +20,7 @@ import {
   contentDateKey,
   contentMonthGrid,
   contentStatusClass,
+  createApprovalToken,
   createDemoContents,
   emptyContentPayload,
   formatClass,
@@ -76,6 +79,7 @@ function contentPayload(item: ContentItem): ContentPayload {
     asset_url: item.asset_url,
     notes: item.notes,
     priority: item.priority,
+    approval_due_date: item.approval_due_date,
   };
 }
 
@@ -95,6 +99,8 @@ export default function ContentManager() {
   const [form, setForm] = useState<ContentPayload>(emptyContentPayload);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [approvalHistory, setApprovalHistory] = useState<ApprovalEvent[]>([]);
+  const [approvalMessage, setApprovalMessage] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -104,8 +110,10 @@ export default function ContentManager() {
         setClients(clientRows);
         try {
           const raw = window.localStorage.getItem("plenna-demo-content-items");
-          const saved = raw ? (JSON.parse(raw) as ContentItem[]) : createDemoContents(clientRows);
-          if (!raw) window.localStorage.setItem("plenna-demo-content-items", JSON.stringify(saved.map(stripContentRelations)));
+          const saved = raw
+            ? (JSON.parse(raw) as Array<Record<string, unknown>>).map(normalizeContent).map((item) => item.approval_token ? item : { ...item, approval_token: createApprovalToken() })
+            : createDemoContents(clientRows);
+          window.localStorage.setItem("plenna-demo-content-items", JSON.stringify(saved.map(stripContentRelations)));
           setItems(attachClients(saved, clientRows));
         } catch {
           setItems(createDemoContents(clientRows));
@@ -133,6 +141,12 @@ export default function ContentManager() {
     void load();
   }, []);
 
+  useEffect(() => {
+    const requestedView = new URLSearchParams(window.location.search).get("view");
+    if (requestedView === "calendar") setView("Calendário");
+    if (requestedView === "list") setView("Lista");
+  }, []);
+
   function persistLocal(next: ContentItem[]) {
     setItems(next);
     window.localStorage.setItem("plenna-demo-content-items", JSON.stringify(next.map(stripContentRelations)));
@@ -157,7 +171,7 @@ export default function ContentManager() {
     return {
       month: monthItems.length,
       production: items.filter((item) => ["Roteiro", "Gravação", "Edição"].includes(item.status)).length,
-      approval: items.filter((item) => item.status === "Aprovação").length,
+      approval: items.filter((item) => item.approval_status === "Aguardando" || item.approval_status === "Ajustes solicitados").length,
       scheduled: items.filter((item) => item.status === "Agendado").length,
       published: monthItems.filter((item) => item.status === "Publicado").length,
     };
@@ -167,16 +181,48 @@ export default function ContentManager() {
     setEditing(null);
     setForm({ ...emptyContentPayload, status, publication_date: date });
     setMessage("");
+    setApprovalMessage("");
+    setApprovalHistory([]);
     setOpenMenu(null);
     setModalOpen(true);
+  }
+
+  async function loadApprovalHistory(contentId: string) {
+    if (!isSupabaseConfigured) {
+      try {
+        const raw = window.localStorage.getItem("plenna-demo-approval-events");
+        const events = raw ? (JSON.parse(raw) as ApprovalEvent[]) : [];
+        setApprovalHistory(events.filter((event) => event.content_item_id === contentId));
+      } catch {
+        setApprovalHistory([]);
+      }
+      return;
+    }
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.from("content_approval_events").select("id,content_item_id,action,reviewer_name,feedback,created_at").eq("content_item_id", contentId).order("created_at", { ascending: false });
+      if (error) throw error;
+      setApprovalHistory((data ?? []).map((row) => ({
+        id: String(row.id),
+        content_item_id: String(row.content_item_id),
+        action: row.action as ApprovalEvent["action"],
+        reviewer_name: String(row.reviewer_name ?? ""),
+        feedback: String(row.feedback ?? ""),
+        created_at: String(row.created_at ?? ""),
+      })));
+    } catch {
+      setApprovalHistory([]);
+    }
   }
 
   function openEdit(item: ContentItem) {
     setEditing(item);
     setForm(contentPayload(item));
     setMessage("");
+    setApprovalMessage("");
     setOpenMenu(null);
     setModalOpen(true);
+    void loadApprovalHistory(item.id);
   }
 
   function linkedClient(clientId: string | null) {
@@ -207,7 +253,7 @@ export default function ContentManager() {
     try {
       if (isSupabaseConfigured) {
         const supabase = createClient();
-        const databasePayload = { ...payload, publication_date: payload.publication_date || null, publication_time: payload.publication_time || null };
+        const databasePayload = { ...payload, publication_date: payload.publication_date || null, publication_time: payload.publication_time || null, approval_due_date: payload.approval_due_date || null };
         if (editing) {
           const { data, error } = await supabase.from("content_items").update(databasePayload).eq("id", editing.id).select("*, clients(name,segment,accent)").single();
           if (error) throw error;
@@ -224,7 +270,19 @@ export default function ContentManager() {
         const now = new Date().toISOString();
         const record: ContentItem = editing
           ? { ...editing, ...payload, updated_at: now, clients: linkedClient(payload.client_id) }
-          : { ...payload, id: `local-content-${Date.now()}`, created_at: now, updated_at: now, clients: linkedClient(payload.client_id) };
+          : {
+              ...payload,
+              id: `local-content-${Date.now()}`,
+              approval_token: createApprovalToken(),
+              approval_status: "Não enviado",
+              approval_requested_at: "",
+              approval_decided_at: "",
+              approval_reviewer_name: "",
+              approval_feedback: "",
+              created_at: now,
+              updated_at: now,
+              clients: linkedClient(payload.client_id),
+            };
         const next = editing ? items.map((item) => item.id === editing.id ? record : item) : [record, ...items];
         persistLocal(next);
       }
@@ -233,6 +291,172 @@ export default function ContentManager() {
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar o conteúdo.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function localApprovalEvent(contentId: string, action: ApprovalEvent["action"], feedback = "") {
+    const raw = window.localStorage.getItem("plenna-demo-approval-events");
+    const events = raw ? (JSON.parse(raw) as ApprovalEvent[]) : [];
+    const event: ApprovalEvent = {
+      id: `local-approval-${Date.now()}`,
+      content_item_id: contentId,
+      action,
+      reviewer_name: "Sarah Teixeira",
+      feedback,
+      created_at: new Date().toISOString(),
+    };
+    const next = [event, ...events];
+    window.localStorage.setItem("plenna-demo-approval-events", JSON.stringify(next));
+    setApprovalHistory(next.filter((item) => item.content_item_id === contentId));
+  }
+
+  async function requestApproval() {
+    if (!editing) return;
+    setSaving(true);
+    setApprovalMessage("");
+    const now = new Date().toISOString();
+    const token = editing.approval_token || createApprovalToken();
+    try {
+      if (isSupabaseConfigured) {
+        const supabase = createClient();
+        const payload = {
+          ...form,
+          title: form.title.trim(),
+          pillar: form.pillar.trim(),
+          objective: form.objective.trim(),
+          hook: form.hook.trim(),
+          script: form.script.trim(),
+          caption: form.caption.trim(),
+          cta: form.cta.trim(),
+          reference_url: form.reference_url.trim(),
+          asset_url: form.asset_url.trim(),
+          notes: form.notes.trim(),
+          publication_date: form.publication_date || null,
+          publication_time: form.publication_time || null,
+          approval_due_date: form.approval_due_date || null,
+          approval_token: token,
+          approval_status: "Aguardando",
+          approval_requested_at: now,
+          approval_decided_at: null,
+          approval_reviewer_name: "",
+          approval_feedback: "",
+          status: "Aprovação",
+        };
+        const { data, error } = await supabase.from("content_items").update(payload).eq("id", editing.id).select("*, clients(name,segment,accent)").single();
+        if (error) throw error;
+        const updated = normalizeContent(data as Record<string, unknown>);
+        const { error: historyError } = await supabase.from("content_approval_events").insert({
+          content_item_id: updated.id,
+          action: "Solicitação enviada",
+          reviewer_name: "Sarah Teixeira",
+          feedback: "",
+        });
+        if (historyError) throw historyError;
+        setItems((current) => current.map((item) => item.id === updated.id ? updated : item));
+        setEditing(updated);
+        setForm(contentPayload(updated));
+        await loadApprovalHistory(updated.id);
+      } else {
+        const updated: ContentItem = {
+          ...editing,
+          ...form,
+          approval_token: token,
+          approval_status: "Aguardando",
+          approval_requested_at: now,
+          approval_decided_at: "",
+          approval_reviewer_name: "",
+          approval_feedback: "",
+          status: "Aprovação",
+          updated_at: now,
+          clients: linkedClient(form.client_id),
+        };
+        persistLocal(items.map((item) => item.id === updated.id ? updated : item));
+        setEditing(updated);
+        setForm(contentPayload(updated));
+        localApprovalEvent(updated.id, "Solicitação enviada");
+      }
+      setApprovalMessage("Link de aprovação ativado. Você já pode enviá-lo ao cliente.");
+    } catch (error) {
+      setApprovalMessage(error instanceof Error ? error.message : "Não foi possível enviar para aprovação.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function cancelApproval() {
+    if (!editing) return;
+    setSaving(true);
+    setApprovalMessage("");
+    try {
+      if (isSupabaseConfigured) {
+        const supabase = createClient();
+        const { data, error } = await supabase.from("content_items").update({ approval_status: "Não enviado", approval_requested_at: null, approval_decided_at: null, approval_reviewer_name: "", approval_feedback: "" }).eq("id", editing.id).select("*, clients(name,segment,accent)").single();
+        if (error) throw error;
+        const updated = normalizeContent(data as Record<string, unknown>);
+        setItems((current) => current.map((item) => item.id === updated.id ? updated : item));
+        setEditing(updated);
+        const { error: historyError } = await supabase.from("content_approval_events").insert({ content_item_id: updated.id, action: "Solicitação cancelada", reviewer_name: "Sarah Teixeira", feedback: "" });
+        if (historyError) throw historyError;
+        await loadApprovalHistory(updated.id);
+      } else {
+        const updated: ContentItem = { ...editing, approval_status: "Não enviado", approval_requested_at: "", approval_decided_at: "", approval_reviewer_name: "", approval_feedback: "", updated_at: new Date().toISOString() };
+        persistLocal(items.map((item) => item.id === updated.id ? updated : item));
+        setEditing(updated);
+        localApprovalEvent(updated.id, "Solicitação cancelada");
+      }
+      setApprovalMessage("Solicitação de aprovação cancelada.");
+    } catch (error) {
+      setApprovalMessage(error instanceof Error ? error.message : "Não foi possível cancelar a aprovação.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function refreshApproval() {
+    if (!editing) return;
+    if (!isSupabaseConfigured) {
+      try {
+        const raw = window.localStorage.getItem("plenna-demo-content-items");
+        const saved = raw ? (JSON.parse(raw) as Array<Record<string, unknown>>).map(normalizeContent) : [];
+        const current = attachClients(saved, clients).find((item) => item.id === editing.id);
+        if (current) {
+          setItems(attachClients(saved, clients));
+          setEditing(current);
+          setForm(contentPayload(current));
+        }
+        await loadApprovalHistory(editing.id);
+        setApprovalMessage("Status atualizado.");
+      } catch {
+        setApprovalMessage("Não foi possível atualizar o status local.");
+      }
+      return;
+    }
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase.from("content_items").select("*, clients(name,segment,accent)").eq("id", editing.id).single();
+      if (error) throw error;
+      const updated = normalizeContent(data as Record<string, unknown>);
+      setItems((current) => current.map((item) => item.id === updated.id ? updated : item));
+      setEditing(updated);
+      setForm(contentPayload(updated));
+      await loadApprovalHistory(updated.id);
+      setApprovalMessage("Status atualizado.");
+    } catch (error) {
+      setApprovalMessage(error instanceof Error ? error.message : "Não foi possível atualizar o status.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function copyApprovalLink() {
+    if (!editing?.approval_token) return;
+    const url = approvalPublicUrl(editing.approval_token);
+    try {
+      await navigator.clipboard.writeText(url);
+      setApprovalMessage("Link copiado para a área de transferência.");
+    } catch {
+      setApprovalMessage(url);
     }
   }
 
@@ -275,18 +499,30 @@ export default function ContentManager() {
 
   async function duplicateContent(item: ContentItem) {
     setMessage("");
-    const payload = { ...contentPayload(item), title: `${item.title} — cópia`, status: "Ideia" as ContentStatus, publication_date: "", publication_time: "" };
+    const payload = { ...contentPayload(item), title: `${item.title} — cópia`, status: "Ideia" as ContentStatus, publication_date: "", publication_time: "", approval_due_date: "" };
     try {
       if (isSupabaseConfigured) {
         const supabase = createClient();
         const { data: userData, error: userError } = await supabase.auth.getUser();
         if (userError || !userData.user) throw userError ?? new Error("Sessão não encontrada.");
-        const { data, error } = await supabase.from("content_items").insert({ ...payload, owner_id: userData.user.id, publication_date: null, publication_time: null }).select("*, clients(name,segment,accent)").single();
+        const { data, error } = await supabase.from("content_items").insert({ ...payload, owner_id: userData.user.id, publication_date: null, publication_time: null, approval_due_date: null }).select("*, clients(name,segment,accent)").single();
         if (error) throw error;
         setItems((current) => [normalizeContent(data as Record<string, unknown>), ...current]);
       } else {
         const now = new Date().toISOString();
-        persistLocal([{ ...payload, id: `local-content-${Date.now()}`, created_at: now, updated_at: now, clients: linkedClient(payload.client_id) }, ...items]);
+        persistLocal([{
+          ...payload,
+          id: `local-content-${Date.now()}`,
+          approval_token: createApprovalToken(),
+          approval_status: "Não enviado",
+          approval_requested_at: "",
+          approval_decided_at: "",
+          approval_reviewer_name: "",
+          approval_feedback: "",
+          created_at: now,
+          updated_at: now,
+          clients: linkedClient(payload.client_id),
+        }, ...items]);
       }
       setOpenMenu(null);
     } catch (error) {
@@ -311,7 +547,7 @@ export default function ContentManager() {
 
   return (
     <>
-      <PageHeader eyebrow="PRODUÇÃO" title="Planejamento de conteúdo" description="Organize estratégia, criação, aprovação e publicação em um único fluxo." actionNode={<button className="primary-button" onClick={() => openCreate()}><PlusIcon size={17}/>Novo conteúdo</button>} />
+      <PageHeader eyebrow="PRODUÇÃO" title="Planejamento de conteúdo" description="Calendário editorial: organize estratégia, criação, aprovação e publicação." actionNode={<div className="content-header-actions-v16"><Link className="secondary-button" href="/agenda"><CalendarIcon size={16}/>Agenda operacional</Link><button className="primary-button" onClick={() => openCreate()}><PlusIcon size={17}/>Novo conteúdo</button></div>} />
 
       <div className="data-mode-row">
         <span className={`connection-badge ${isSupabaseConfigured ? "connected" : "demo"}`}><i />{isSupabaseConfigured ? "Supabase conectado" : "Modo demonstração · salvo neste navegador"}</span>
@@ -349,7 +585,7 @@ export default function ContentManager() {
       </section>}
 
       {!loading && view === "Calendário" && <section className="content-calendar-v14">
-        <div className="content-calendar-toolbar"><div><span>CALENDÁRIO EDITORIAL</span><h2>{monthFormatter.format(currentMonth)}</h2></div><div><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}>‹</button><button className="today-button" onClick={() => setCurrentMonth(new Date())}>Hoje</button><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}>›</button></div></div>
+        <div className="content-calendar-toolbar"><div><span>CALENDÁRIO EDITORIAL · PUBLICAÇÕES</span><h2>{monthFormatter.format(currentMonth)}</h2><Link className="calendar-cross-link-v16" href="/agenda">Abrir agenda de reuniões e gravações →</Link></div><div><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))}>‹</button><button className="today-button" onClick={() => setCurrentMonth(new Date())}>Hoje</button><button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))}>›</button></div></div>
         <div className="content-calendar-weekdays">{weekdays.map((day) => <span key={day}>{day}</span>)}</div>
         <div className="content-calendar-grid">{grid.map((date) => {
           const key = contentDateKey(date);
@@ -366,7 +602,7 @@ export default function ContentManager() {
       {!loading && view === "Lista" && <section className="content-list-v14">
         <div className="content-list-head"><span>CONTEÚDO</span><span>CLIENTE</span><span>FORMATO</span><span>STATUS</span><span>PUBLICAÇÃO</span><span /></div>
         {sortedList.map((item) => <article key={item.id} onClick={() => openEdit(item)}>
-          <div><strong>{item.title}</strong><small>{item.pillar || "Sem pilar"} · {item.journey_stage}</small></div>
+          <div><strong>{item.title}</strong><small>{item.pillar || "Sem pilar"} · {item.journey_stage}</small>{item.approval_status !== "Não enviado" && <span className={`approval-status compact ${approvalStatusClass(item.approval_status)}`}>{item.approval_status}</span>}</div>
           <span>{item.clients?.name ?? "Sem cliente"}</span>
           <span className={`format-badge ${formatClass(item.content_format)}`}>{item.content_format}</span>
           <span className={`content-status-badge ${contentStatusClass(item.status)}`}>{item.status}</span>
@@ -412,6 +648,18 @@ export default function ContentManager() {
               </div>
             </section>
 
+            <section className="approval-workspace-v16"><div className="content-form-section-title"><span>04</span><div><strong>Aprovação do cliente</strong><small>Envie um link público e acompanhe a decisão.</small></div></div>
+              <div className="content-form-grid"><label>Prazo para aprovação<input type="date" value={form.approval_due_date} onChange={(event) => setForm({ ...form, approval_due_date: event.target.value })}/></label><div className="approval-file-hint-v16"><FileIcon size={18}/><span>O link do arquivo final e a legenda serão exibidos ao cliente.</span></div></div>
+              {!editing ? <div className="approval-save-first-v16"><SparklesIcon size={20}/><div><strong>Salve o conteúdo primeiro</strong><p>Depois de criar a pauta, reabra-a para gerar e compartilhar o link de aprovação.</p></div></div> : <div className="approval-internal-v16">
+                <div className="approval-internal-head-v16"><div><span className={`approval-status ${approvalStatusClass(editing.approval_status)}`}>{editing.approval_status}</span><small>{editing.approval_due_date ? `Prazo: ${formatApprovalDate(editing.approval_due_date)}` : "Sem prazo definido"}</small></div><button type="button" className="text-button-v16" onClick={() => void refreshApproval()} disabled={saving}>Atualizar status</button></div>
+                {editing.approval_status !== "Não enviado" && editing.approval_token ? <div className="approval-link-row-v16"><input readOnly value={`/aprovacao/${editing.approval_token}`}/><button type="button" className="secondary-button" onClick={() => void copyApprovalLink()}>Copiar link</button><a className="secondary-button" href={`/aprovacao/${editing.approval_token}`} target="_blank" rel="noreferrer">Abrir</a></div> : <p className="approval-internal-message-v16">O link será liberado quando você clicar em “Enviar para aprovação”.</p>}
+                <div className="approval-actions-v16">{editing.approval_status === "Aguardando" ? <button type="button" className="secondary-button" onClick={() => void cancelApproval()} disabled={saving}>Cancelar solicitação</button> : <button type="button" className="primary-button" onClick={() => void requestApproval()} disabled={saving}>{editing.approval_status === "Ajustes solicitados" ? "Reenviar para aprovação" : "Enviar para aprovação"}</button>}</div>
+                {(editing.approval_status === "Aprovado" || editing.approval_status === "Ajustes solicitados") && <div className={`approval-latest-decision-v16 ${editing.approval_status === "Aprovado" ? "approved" : "changes"}`}><CheckIcon size={20}/><div><strong>{editing.approval_status}</strong><p>{editing.approval_reviewer_name || "Cliente"}{editing.approval_decided_at ? ` · ${formatApprovalTimestamp(editing.approval_decided_at)}` : ""}</p>{editing.approval_feedback && <blockquote>{editing.approval_feedback}</blockquote>}</div></div>}
+                {approvalMessage && <p className="approval-internal-message-v16">{approvalMessage}</p>}
+                {approvalHistory.length > 0 && <div className="approval-history-v16"><strong>Histórico</strong>{approvalHistory.slice(0, 6).map((event) => <article key={event.id}><i/><div><span>{event.action}</span><small>{event.reviewer_name || "Cliente"} · {formatApprovalTimestamp(event.created_at)}</small>{event.feedback && <p>{event.feedback}</p>}</div></article>)}</div>}
+              </div>}
+            </section>
+
             {message && <p className="form-message">{message}</p>}
             <div className="content-modal-summary"><span className={`content-status-badge ${contentStatusClass(form.status)}`}>{form.status}</span><span>{form.publication_date ? longContentDate(form.publication_date) : "Publicação ainda sem data"}</span></div>
             <div className="content-modal-actions">{editing ? <button type="button" className="danger-button" onClick={() => void deleteContent(editing)} disabled={saving}>Excluir</button> : <span/>}<button type="button" className="secondary-button" onClick={() => setModalOpen(false)} disabled={saving}>Cancelar</button><button type="submit" className="primary-button" disabled={saving}>{saving ? "Salvando..." : editing ? "Salvar alterações" : "Criar conteúdo"}</button></div>
@@ -435,6 +683,7 @@ function ContentCard({ item, openMenu, setOpenMenu, onEdit, onDelete, onDuplicat
   return <article className="content-card-v14" draggable onDragStart={onDragStart} onDragEnd={onDragEnd} onClick={() => onEdit(item)}>
     <div className="content-card-v14-top"><span className={`format-badge ${formatClass(item.content_format)}`}>{item.content_format}</span><button onClick={(event) => { event.stopPropagation(); setOpenMenu(openMenu === item.id ? null : item.id); }}><MoreIcon size={17}/></button>{openMenu === item.id && <div className="content-card-menu" onClick={(event) => event.stopPropagation()}><button onClick={() => onEdit(item)}>Editar</button><button onClick={() => void onDuplicate(item)}>Duplicar</button><button className="danger" onClick={() => void onDelete(item)}>Excluir</button></div>}</div>
     <h3>{item.title}</h3>
+    {item.approval_status !== "Não enviado" && <span className={`approval-status compact ${approvalStatusClass(item.approval_status)}`}>{item.approval_status}</span>}
     <p><i style={{ background: item.clients?.accent ?? "#9a8790" }}/>{item.clients?.name ?? "Sem cliente"}</p>
     {item.hook && <blockquote>{item.hook}</blockquote>}
     <div className="content-card-v14-tags"><span>{item.pillar || "Sem pilar"}</span><span>{item.journey_stage}</span></div>

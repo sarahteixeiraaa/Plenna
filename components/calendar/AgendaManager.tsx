@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import PageHeader from "@/components/PageHeader";
 import { CalendarIcon, CheckIcon, ClockIcon, PlusIcon, SearchIcon, VideoIcon } from "@/components/icons";
 import { createClient } from "@/lib/supabase/client";
@@ -242,8 +243,8 @@ export default function AgendaManager() {
       <PageHeader
         eyebrow="ORGANIZAÇÃO"
         title="Agenda"
-        description="Reuniões, gravações, eventos e prazos em um calendário conectado ao fluxo da Plenna."
-        actionNode={<button className="primary-button" onClick={() => openCreate()}><PlusIcon size={17}/>Novo compromisso</button>}
+        description="Agenda operacional para reuniões, gravações, eventos e prazos."
+        actionNode={<div className="content-header-actions-v16"><Link className="secondary-button" href="/conteudos?view=calendar"><CalendarIcon size={16}/>Calendário editorial</Link><button className="primary-button" onClick={() => openCreate()}><PlusIcon size={17}/>Novo compromisso</button></div>}
       />
 
       <section className="agenda-v13-toolbar panel">
@@ -257,7 +258,7 @@ export default function AgendaManager() {
       {loading ? <div className="clients-loading">Carregando agenda...</div> : view === "Mês" ? (
         <div className="agenda-v13-layout">
           <section className="panel calendar-v13-panel">
-            <div className="calendar-v13-toolbar"><div><span>CALENDÁRIO</span><h2>{monthFormatter.format(currentMonth)}</h2></div><div><button onClick={() => moveMonth(-1)} aria-label="Mês anterior">‹</button><button className="today-button" onClick={() => { const today = new Date(); setCurrentMonth(today); setSelectedDate(today); }}>Hoje</button><button onClick={() => moveMonth(1)} aria-label="Próximo mês">›</button></div></div>
+            <div className="calendar-v13-toolbar"><div><span>AGENDA OPERACIONAL · COMPROMISSOS</span><h2>{monthFormatter.format(currentMonth)}</h2><Link className="calendar-cross-link-v16" href="/conteudos?view=calendar">Abrir calendário de publicações →</Link></div><div><button onClick={() => moveMonth(-1)} aria-label="Mês anterior">‹</button><button className="today-button" onClick={() => { const today = new Date(); setCurrentMonth(today); setSelectedDate(today); }}>Hoje</button><button onClick={() => moveMonth(1)} aria-label="Próximo mês">›</button></div></div>
             <div className="calendar-weekdays">{["SEG", "TER", "QUA", "QUI", "SEX", "SÁB", "DOM"].map((day) => <span key={day}>{day}</span>)}</div>
             <div className="calendar-v13-grid">{grid.map((day) => {
               const eventsForDay = filteredEvents.filter((event) => isSameDay(event.start_at, day)).sort((a, b) => a.start_at.localeCompare(b.start_at));
