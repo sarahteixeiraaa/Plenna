@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   CalendarIcon, ClipboardIcon, CloseIcon, FolderIcon, HomeIcon, LayersIcon,
-  MenuIcon, SettingsIcon, SparklesIcon, UsersIcon, VideoIcon
+  MenuIcon, PortalIcon, SettingsIcon, SparklesIcon, UsersIcon, VideoIcon
 } from "./icons";
 
 const navigation = [
@@ -16,6 +16,7 @@ const navigation = [
   { label: "Briefings", href: "/briefings", icon: ClipboardIcon },
   { label: "Reuniões", href: "/reunioes", icon: VideoIcon },
   { label: "Storymaker", href: "/storymaker", icon: SparklesIcon },
+  { label: "Portal", href: "/portal", icon: PortalIcon },
   { label: "Arquivos", href: "/arquivos", icon: FolderIcon },
 ];
 

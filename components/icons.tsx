@@ -30,4 +30,5 @@ export const TrendIcon = (p: Props) => <IconBase {...p}><path d="m3 17 6-6 4 4 8
 export const MenuIcon = (p: Props) => <IconBase {...p}><path d="M4 7h16M4 12h16M4 17h16"/></IconBase>;
 export const CloseIcon = (p: Props) => <IconBase {...p}><path d="m6 6 12 12M18 6 6 18"/></IconBase>;
 export const FileIcon = (p: Props) => <IconBase {...p}><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></IconBase>;
+export const PortalIcon = (p: Props) => <IconBase {...p}><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 20V9M12 13h5M12 16h3"/></IconBase>;
 export const UploadIcon = (p: Props) => <IconBase {...p}><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></IconBase>;
