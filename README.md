@@ -1,257 +1,139 @@
-# Plenna v1.6 — atualização incremental
+# Plenna v1.7 — Portal do Cliente
 
-Esta atualização reúne:
+Atualização incremental da Plenna para criar uma área privada e individual para cada cliente.
 
-- **v1.5 — Aprovação de conteúdos**;
-- **v1.6 — Gestão profissional de Storymaker**;
-- refinamentos para diferenciar a **Agenda operacional** do **Calendário editorial**.
+## O que foi incluído
 
-O pacote contém somente arquivos novos ou modificados. Ele deve ser aplicado sobre a Plenna v1.4 já instalada.
+- Administração dos portais dentro da Plenna;
+- Link privado e código de acesso por cliente;
+- Ativação e desativação individual;
+- Mensagem personalizada de boas-vindas;
+- Registro do último acesso;
+- Visão geral do projeto;
+- Conteúdos em aprovação, agendados e publicados;
+- Acesso direto à aprovação de conteúdos;
+- Reuniões, gravações e eventos vinculados ao cliente;
+- Status e link do briefing;
+- Central de arquivos e links;
+- Pendências com prazo, prioridade e resposta do cliente;
+- Interface responsiva para celular;
+- Separação completa entre dados internos da Sarah e dados exibidos ao cliente.
 
----
+## Instalação
 
-## 1. Antes de atualizar
+### 1. Atualize os arquivos
 
-Confirme que a versão atual está funcionando e faça um backup do repositório ou crie um commit antes da substituição.
+Extraia o ZIP na raiz do projeto e confirme a substituição dos arquivos existentes.
 
-Não apague:
-
-- `.env.local`;
-- variáveis configuradas na Vercel;
-- tabelas existentes no Supabase;
-- arquivos que não aparecem neste pacote.
-
----
-
-## 2. Arquivos modificados
-
-Copie estes arquivos para os mesmos caminhos do projeto e confirme a substituição:
+Arquivos modificados:
 
 ```text
-package.json
 app/globals.css
-app/(app)/storymaker/page.tsx
-components/calendar/AgendaManager.tsx
-components/content/ContentManager.tsx
-lib/content.ts
+components/Sidebar.tsx
+components/icons.tsx
 lib/supabase/proxy.ts
+package.json
 README.md
 CHANGELOG.md
 ```
 
-## 3. Arquivos novos
+Arquivos novos:
 
 ```text
-app/aprovacao/[token]/page.tsx
-app/(app)/storymaker/[id]/page.tsx
-components/approvals/PublicContentApproval.tsx
-components/storymaker/CoverageMode.tsx
-components/storymaker/StorymakerManager.tsx
-lib/approval.ts
-lib/storymaker.ts
-supabase/plenna-v1.6.sql
+app/(app)/portal/page.tsx
+app/cliente/[token]/page.tsx
+components/portal/PortalManager.tsx
+components/portal/PublicClientPortal.tsx
+lib/portal.ts
+supabase/plenna-v1.7.sql
 ```
 
----
+### 2. Atualize o Supabase
 
-## 4. Atualizar o Supabase
-
-Abra:
-
-**Supabase → SQL Editor → New query**
-
-Copie e execute somente:
+Abra **Supabase → SQL Editor**, crie uma nova consulta, cole todo o conteúdo de:
 
 ```text
-supabase/plenna-v1.6.sql
+supabase/plenna-v1.7.sql
 ```
+
+Execute apenas esse arquivo. Não é necessário executar novamente os SQLs anteriores.
 
 O script cria:
 
-- campos de aprovação na tabela `content_items`;
-- tabela `content_approval_events`;
-- funções seguras para aprovação por link público;
-- tabela `story_coverages`;
-- índices, políticas RLS e gatilho de atualização.
+- configurações de portal na tabela `clients`;
+- tabela `client_portal_tasks`;
+- tabela `client_portal_files`;
+- funções protegidas para acesso pelo token e código;
+- políticas de segurança para a área interna da Sarah.
 
-O script foi preparado para ser executado após os scripts das versões anteriores.
+### 3. Faça o deploy
 
-### Nenhuma variável nova é necessária
+Envie os arquivos ao GitHub. A Vercel deverá iniciar um novo deploy automaticamente.
 
-Continue utilizando:
+Nenhuma variável de ambiente nova é necessária.
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
-```
+## Primeiro teste
 
----
+1. Entre na Plenna com a conta da Sarah;
+2. Abra **Portal** no menu lateral;
+3. Selecione um cliente;
+4. Ative o portal;
+5. Crie um código de acesso;
+6. Personalize a mensagem de boas-vindas;
+7. Clique em **Salvar configurações**;
+8. Crie uma pendência;
+9. Adicione um link de arquivo;
+10. Copie o link do portal;
+11. Abra o link em uma janela anônima;
+12. Informe o código criado;
+13. Confira conteúdos, agenda, briefing, arquivos e pendências;
+14. Responda uma pendência e marque-a como concluída;
+15. Volte à área interna e confirme que a resposta apareceu.
 
-## 5. Enviar ao GitHub e à Vercel
+## Regras de exibição
 
-Depois de copiar os arquivos e executar o SQL:
+O portal mostra automaticamente apenas:
 
-```bash
-git add .
-git commit -m "Plenna v1.6 - aprovacoes e storymaker"
-git push
-```
+- conteúdos em `Aprovação`, `Agendado` ou `Publicado`;
+- reuniões, gravações e eventos vinculados ao cliente e não cancelados;
+- briefings vinculados ao cliente;
+- arquivos cadastrados especificamente no módulo Portal;
+- pendências cadastradas especificamente no módulo Portal.
 
-A Vercel deverá iniciar o deploy automaticamente.
+Não são exibidos:
 
-Se a versão antiga continuar aparecendo, faça um novo deploy em:
+- notas internas de reunião;
+- decisões internas;
+- roteiros e conteúdos ainda em produção;
+- mensalidade, contrato ou dados financeiros;
+- informações de outros clientes;
+- anotações estratégicas privadas da Sarah.
 
-**Vercel → Deployments → Redeploy**
+## Arquivos no portal
 
----
+Nesta versão, a Central de Arquivos trabalha com **links** do Google Drive, Canva, Dropbox, OneDrive ou outra plataforma. O upload direto de arquivos para o Supabase Storage ficará para uma atualização futura.
 
-# TESTE 1 — Aprovação de conteúdo
+## Segurança
 
-## Preparar o conteúdo
+Cada portal utiliza:
 
-1. Entre em **Conteúdos**.
-2. Crie ou edite uma pauta.
-3. Preencha principalmente:
-   - título;
-   - cliente;
-   - formato;
-   - legenda;
-   - data de publicação;
-   - link do arquivo final;
-   - prazo de aprovação.
-4. Salve o conteúdo.
-5. Abra-o novamente.
+- um token UUID exclusivo no endereço;
+- um código de acesso armazenado como hash no banco;
+- funções `security definer` que retornam apenas dados permitidos;
+- validação do cliente em todas as atualizações públicas;
+- sessão temporária no navegador do cliente.
 
-## Enviar para aprovação
+O código original não é armazenado em texto aberto no Supabase.
 
-Na seção **04 — Aprovação do cliente**:
+## Teste de regressão
 
-1. Clique em **Enviar para aprovação**.
-2. Clique em **Copiar link**.
-3. Abra o link em uma janela anônima.
-4. Confira a arte ou o arquivo, a legenda e a data.
-5. Informe o nome do responsável.
-6. Escolha:
-   - **Aprovar**; ou
-   - **Solicitar ajustes**.
-7. Confirme a decisão.
+Depois da atualização, confirme também:
 
-## Resultado esperado
-
-### Ao aprovar
-
-- o status de aprovação fica **Aprovado**;
-- o conteúdo avança automaticamente para **Agendado** no Kanban;
-- nome, horário e comentário ficam registrados no histórico.
-
-### Ao solicitar ajustes
-
-- o status fica **Ajustes solicitados**;
-- o conteúdo permanece na etapa **Aprovação**;
-- o comentário aparece dentro da pauta;
-- a Sarah pode corrigir e clicar em **Reenviar para aprovação**.
-
-Depois da resposta do cliente, clique em **Atualizar status** dentro do conteúdo para buscar a decisão imediatamente. Recarregar a página também atualiza os dados.
-
-## Sobre a prévia do arquivo
-
-- Links diretos terminados em `.jpg`, `.png`, `.webp`, `.mp4` ou formatos semelhantes recebem prévia na página.
-- Links do Canva, Google Drive, CapCut ou pastas externas aparecem como botão para abrir o arquivo.
-- O cliente não precisa criar conta na Plenna.
-
-## Segurança do link
-
-A página pública mostra apenas as informações necessárias para revisão. Objetivo estratégico, roteiro interno, observações operacionais e demais dados privados não são retornados pela função pública.
-
----
-
-# TESTE 2 — Storymaker
-
-## Criar uma cobertura
-
-1. Entre em **Storymaker**.
-2. Clique em **Nova cobertura**.
-3. Preencha:
-   - evento e cliente;
-   - data, horários e local;
-   - objetivo e estilo;
-   - programação;
-   - pessoas importantes;
-   - momentos obrigatórios;
-   - equipamentos;
-   - marcações, hashtags, links e CTA.
-4. Salve.
-
-## Usar o modo cobertura
-
-1. Clique em **Abrir modo cobertura**.
-2. Clique em **Iniciar cobertura**.
-3. Toque em cada momento para avançar entre:
-
-```text
-Pendente → Capturado → Publicado
-```
-
-4. Marque os equipamentos conferidos.
-5. Use os botões para copiar marcações, hashtags, links e CTA.
-6. Ao terminar, clique em **Finalizar**.
-
-## Resultado esperado
-
-- progresso salvo no Supabase;
-- status da cobertura atualizado;
-- momentos e equipamentos preservados após atualizar a página;
-- tela confortável para uso pelo celular durante o evento.
-
----
-
-# TESTE 3 — Calendários
-
-A navegação agora diferencia explicitamente:
-
-- **Agenda operacional:** reuniões, gravações, eventos e prazos;
-- **Calendário editorial:** datas de publicação dos conteúdos.
-
-Há atalhos entre as duas telas para reduzir confusão.
-
----
-
-# Modo demonstração
-
-Sem Supabase, os novos módulos continuam utilizando `localStorage`.
-
-Atenção: no modo demonstração, o link público de aprovação funciona somente no mesmo navegador em que o conteúdo foi criado. Com o Supabase configurado, o link funciona em qualquer dispositivo.
-
----
-
-# Solução de problemas
-
-## A página pública redireciona para o login
-
-Confirme que este arquivo foi substituído:
-
-```text
-lib/supabase/proxy.ts
-```
-
-A rota `/aprovacao/` precisa estar marcada como pública.
-
-## Erro dizendo que uma tabela não existe
-
-Execute novamente:
-
-```text
-supabase/plenna-v1.6.sql
-```
-
-## Link de aprovação abre como indisponível
-
-Abra o conteúdo e clique em **Enviar para aprovação**. O link só é liberado quando o status está diferente de **Não enviado**.
-
-## Cliente aprovou, mas o Kanban ainda não mudou
-
-Abra a pauta e clique em **Atualizar status**, ou recarregue a página de Conteúdos.
-
-## Arquivo não aparece como imagem ou vídeo
-
-Alguns serviços não fornecem um link direto para a mídia. Nesses casos, a Plenna exibe o botão **Abrir arquivo para revisão**, o que é o comportamento esperado.
+- login da Sarah;
+- cadastro de clientes;
+- briefings públicos;
+- agenda e reuniões;
+- calendário de conteúdos;
+- aprovação pública;
+- Storymaker;
+- logout e proteção das páginas internas.

@@ -36,8 +36,9 @@ export async function updateSession(request: NextRequest) {
   const isAuthPage = path.startsWith("/login") || path.startsWith("/redefinir-senha") || path.startsWith("/auth/");
   const isPublicBriefing = path.startsWith("/briefing/");
   const isPublicApproval = path.startsWith("/aprovacao/");
+  const isClientPortal = path.startsWith("/cliente/");
 
-  if (!user && !isAuthPage && !isPublicBriefing && !isPublicApproval) {
+  if (!user && !isAuthPage && !isPublicBriefing && !isPublicApproval && !isClientPortal) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirect", path);

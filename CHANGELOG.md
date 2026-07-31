@@ -1,49 +1,33 @@
-# Changelog — Plenna v1.6
+# Changelog — Plenna
 
-## Aprovação de conteúdos
+## v1.7.0 — Portal do Cliente
 
-- Link público exclusivo por conteúdo.
-- Aprovação sem conta para o cliente.
-- Opções de aprovar ou solicitar ajustes.
-- Registro do nome, comentário, data e horário da decisão.
-- Prazo de aprovação.
-- Histórico interno das solicitações e respostas.
-- Reenvio após ajustes.
-- Mudança automática para `Agendado` quando aprovado.
-- Retorno para `Aprovação` quando ajustes são solicitados.
-- Página pública com prévia de imagem ou vídeo quando o link é direto.
-- Abertura segura de arquivos hospedados no Canva, Drive, CapCut ou serviços externos.
-- Funções RPC com exposição limitada de dados.
+### Adicionado
 
-## Storymaker
+- Portal privado por cliente;
+- Token exclusivo e código de acesso protegido;
+- Ativação e desativação do portal;
+- Mensagem personalizada de boas-vindas;
+- Registro do último acesso;
+- Dashboard público responsivo;
+- Conteúdos com acesso à aprovação;
+- Agenda compartilhada;
+- Área de briefing;
+- Central de arquivos por links;
+- Pendências com prazo, prioridade, resposta e conclusão;
+- Administração interna de portais;
+- Funções RPC públicas com validação de acesso;
+- Tabelas `client_portal_tasks` e `client_portal_files`.
 
-- Cadastro completo de coberturas.
-- Vínculo com clientes.
-- Data, horários, local e contato no evento.
-- Objetivo, estilo e plataforma.
-- Programação e pessoas importantes.
-- Shot list editável.
-- Checklist de equipamentos.
-- Marcações, hashtags, links e CTA preparados.
-- Modo cobertura otimizado para celular.
-- Estados `Pendente`, `Capturado` e `Publicado` por momento.
-- Progresso em tempo real.
-- Botões para copiar textos.
-- Início e finalização da cobertura.
-- Persistência no Supabase e modo demonstração.
+### Segurança
 
-## Interface e organização
+- Código armazenado com hash `pgcrypto`;
+- Dados internos não são retornados ao portal;
+- Funções públicas filtram todos os registros pelo cliente autenticado pelo token e código;
+- RLS preservada para a área interna da Sarah;
+- Rota `/cliente/[token]` liberada no proxy sem liberar as páginas administrativas.
 
-- Agenda renomeada visualmente como agenda operacional.
-- Calendário de Conteúdos identificado como calendário editorial.
-- Atalhos entre os dois calendários.
-- Novos indicadores de aprovação nos cartões.
-- Novos painéis e estados responsivos.
+### Observação
 
-## Banco de dados
-
-- Novos campos em `content_items`.
-- Nova tabela `content_approval_events`.
-- Nova tabela `story_coverages`.
-- Políticas RLS por usuário.
-- Funções públicas específicas para leitura e decisão de aprovação.
+- Arquivos são compartilhados por links nesta versão;
+- Upload direto para armazenamento será tratado em uma etapa futura.
