@@ -32,3 +32,9 @@ export const CloseIcon = (p: Props) => <IconBase {...p}><path d="m6 6 12 12M18 6
 export const FileIcon = (p: Props) => <IconBase {...p}><path d="M6 2h8l4 4v16H6z"/><path d="M14 2v5h5"/></IconBase>;
 export const PortalIcon = (p: Props) => <IconBase {...p}><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 20V9M12 13h5M12 16h3"/></IconBase>;
 export const UploadIcon = (p: Props) => <IconBase {...p}><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></IconBase>;
+export const HeartIcon = (p: Props) => <IconBase {...p}><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></IconBase>;
+export const LinkIcon = (p: Props) => <IconBase {...p}><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/></IconBase>;
+export const CopyIcon = (p: Props) => <IconBase {...p}><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></IconBase>;
+export const BookmarkIcon = (p: Props) => <IconBase {...p}><path d="M6 3h12v18l-6-4-6 4V3Z"/></IconBase>;
+export const ExternalLinkIcon = (p: Props) => <IconBase {...p}><path d="M14 3h7v7M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></IconBase>;
+export const TagIcon = (p: Props) => <IconBase {...p}><path d="M20 12 12 20l-9-9V4h7l10 8Z"/><circle cx="7.5" cy="8.5" r="1"/></IconBase>;

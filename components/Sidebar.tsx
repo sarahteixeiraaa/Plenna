@@ -17,7 +17,7 @@ const navigation = [
   { label: "Reuniões", href: "/reunioes", icon: VideoIcon },
   { label: "Storymaker", href: "/storymaker", icon: SparklesIcon },
   { label: "Portal", href: "/portal", icon: PortalIcon },
-  { label: "Arquivos", href: "/arquivos", icon: FolderIcon },
+  { label: "Biblioteca", href: "/arquivos", icon: FolderIcon },
 ];
 
 function NavContent({ pathname, close }: { pathname: string; close?: () => void }) {

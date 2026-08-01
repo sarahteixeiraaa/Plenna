@@ -1,139 +1,112 @@
-# Plenna v1.7 — Portal do Cliente
+# Plenna v1.8 — Atualização incremental
 
-Atualização incremental da Plenna para criar uma área privada e individual para cada cliente.
+Esta atualização adiciona a **Biblioteca Criativa e a Central de Arquivos** à instalação existente da Plenna v1.7.
 
-## O que foi incluído
+> O pacote contém somente arquivos novos ou alterados. Não apague as demais pastas do projeto.
 
-- Administração dos portais dentro da Plenna;
-- Link privado e código de acesso por cliente;
-- Ativação e desativação individual;
-- Mensagem personalizada de boas-vindas;
-- Registro do último acesso;
-- Visão geral do projeto;
-- Conteúdos em aprovação, agendados e publicados;
-- Acesso direto à aprovação de conteúdos;
-- Reuniões, gravações e eventos vinculados ao cliente;
-- Status e link do briefing;
-- Central de arquivos e links;
-- Pendências com prazo, prioridade e resposta do cliente;
-- Interface responsiva para celular;
-- Separação completa entre dados internos da Sarah e dados exibidos ao cliente.
+## Novidades
 
-## Instalação
+### Materiais dos clientes
 
-### 1. Atualize os arquivos
+- Central única para links do Google Drive, Canva, CapCut, sites e documentos;
+- Materiais vinculados a cada cliente;
+- Tipos: link, pasta, documento, identidade visual, foto, vídeo e outro;
+- Categorias, tags, favoritos e observações;
+- Filtro por cliente;
+- Separação entre materiais visíveis no portal e materiais internos da Sarah;
+- Os materiais cadastrados anteriormente no Portal continuam aparecendo na Biblioteca.
 
-Extraia o ZIP na raiz do projeto e confirme a substituição dos arquivos existentes.
+### Biblioteca criativa
 
-Arquivos modificados:
+- Banco interno de ideias, roteiros, ganchos, legendas, CTAs, sequências de Stories, templates e mensagens;
+- Classificação por formato e categoria editorial;
+- Tags, favoritos e contador de reutilizações;
+- Cópia rápida do texto;
+- Botão **Usar com cliente**;
+- Criação automática de uma pauta no Planejamento de Conteúdo.
+
+### Refinamentos
+
+- O item `Arquivos` do menu passa a se chamar `Biblioteca`;
+- Explicação visual clara entre materiais dos clientes e recursos internos da Sarah;
+- Materiais marcados como internos deixam de aparecer no Portal do Cliente;
+- Estados vazios e atalhos foram atualizados.
+
+## Arquivos incluídos
 
 ```text
+app/(app)/arquivos/page.tsx
 app/globals.css
 components/Sidebar.tsx
 components/icons.tsx
-lib/supabase/proxy.ts
+components/library/LibraryManager.tsx
+lib/library.ts
 package.json
+supabase/plenna-v1.8.sql
 README.md
 CHANGELOG.md
 ```
 
-Arquivos novos:
+## Instalação
+
+1. Faça um backup do repositório atual.
+2. Extraia o ZIP da atualização.
+3. Copie todas as pastas e arquivos para a raiz do projeto.
+4. Confirme a substituição dos arquivos existentes.
+5. Abra o Supabase.
+6. Acesse **SQL Editor**.
+7. Execute somente:
 
 ```text
-app/(app)/portal/page.tsx
-app/cliente/[token]/page.tsx
-components/portal/PortalManager.tsx
-components/portal/PublicClientPortal.tsx
-lib/portal.ts
-supabase/plenna-v1.7.sql
+supabase/plenna-v1.8.sql
 ```
 
-### 2. Atualize o Supabase
-
-Abra **Supabase → SQL Editor**, crie uma nova consulta, cole todo o conteúdo de:
-
-```text
-supabase/plenna-v1.7.sql
-```
-
-Execute apenas esse arquivo. Não é necessário executar novamente os SQLs anteriores.
-
-O script cria:
-
-- configurações de portal na tabela `clients`;
-- tabela `client_portal_tasks`;
-- tabela `client_portal_files`;
-- funções protegidas para acesso pelo token e código;
-- políticas de segurança para a área interna da Sarah.
-
-### 3. Faça o deploy
-
-Envie os arquivos ao GitHub. A Vercel deverá iniciar um novo deploy automaticamente.
+8. Envie as alterações ao GitHub.
+9. Aguarde o deploy automático da Vercel.
 
 Nenhuma variável de ambiente nova é necessária.
 
-## Primeiro teste
+## Teste 1 — Material de cliente
 
-1. Entre na Plenna com a conta da Sarah;
-2. Abra **Portal** no menu lateral;
-3. Selecione um cliente;
-4. Ative o portal;
-5. Crie um código de acesso;
-6. Personalize a mensagem de boas-vindas;
-7. Clique em **Salvar configurações**;
-8. Crie uma pendência;
-9. Adicione um link de arquivo;
-10. Copie o link do portal;
-11. Abra o link em uma janela anônima;
-12. Informe o código criado;
-13. Confira conteúdos, agenda, briefing, arquivos e pendências;
-14. Responda uma pendência e marque-a como concluída;
-15. Volte à área interna e confirme que a resposta apareceu.
+1. Abra **Biblioteca**.
+2. Permaneça em **Materiais dos clientes**.
+3. Clique em **Novo material**.
+4. Escolha um cliente.
+5. Cadastre um link válido.
+6. Deixe **Mostrar no Portal do Cliente** ativado.
+7. Salve.
+8. Abra o Portal desse cliente em janela anônima.
+9. Confirme que o material aparece em **Arquivos**.
+10. Volte à Biblioteca, edite o material e desative a opção do portal.
+11. Abra novamente o Portal e confirme que ele não aparece mais.
 
-## Regras de exibição
+## Teste 2 — Biblioteca criativa
 
-O portal mostra automaticamente apenas:
+1. Abra **Biblioteca criativa**.
+2. Clique em **Novo modelo**.
+3. Cadastre um roteiro, gancho ou sequência de Stories.
+4. Salve.
+5. Teste o botão **Copiar**.
+6. Clique em **Usar com cliente**.
+7. Escolha um cliente e confirme.
+8. Abra **Conteúdos**.
+9. Confirme que a nova pauta foi criada com o roteiro, gancho e CTA preenchidos.
 
-- conteúdos em `Aprovação`, `Agendado` ou `Publicado`;
-- reuniões, gravações e eventos vinculados ao cliente e não cancelados;
-- briefings vinculados ao cliente;
-- arquivos cadastrados especificamente no módulo Portal;
-- pendências cadastradas especificamente no módulo Portal.
+## Observação sobre arquivos
 
-Não são exibidos:
+Nesta versão, a Biblioteca organiza **links** para arquivos e pastas externos. Ela não envia arquivos pesados diretamente para o banco da Plenna.
 
-- notas internas de reunião;
-- decisões internas;
-- roteiros e conteúdos ainda em produção;
-- mensalidade, contrato ou dados financeiros;
-- informações de outros clientes;
-- anotações estratégicas privadas da Sarah.
+Isso mantém a plataforma leve e permite continuar usando:
 
-## Arquivos no portal
+- Google Drive;
+- Canva;
+- CapCut;
+- Dropbox;
+- OneDrive;
+- Links de documentos e sites.
 
-Nesta versão, a Central de Arquivos trabalha com **links** do Google Drive, Canva, Dropbox, OneDrive ou outra plataforma. O upload direto de arquivos para o Supabase Storage ficará para uma atualização futura.
+Upload direto poderá ser adicionado futuramente com Supabase Storage, incluindo limites, pastas e regras de armazenamento.
 
-## Segurança
+## Modo demonstração
 
-Cada portal utiliza:
-
-- um token UUID exclusivo no endereço;
-- um código de acesso armazenado como hash no banco;
-- funções `security definer` que retornam apenas dados permitidos;
-- validação do cliente em todas as atualizações públicas;
-- sessão temporária no navegador do cliente.
-
-O código original não é armazenado em texto aberto no Supabase.
-
-## Teste de regressão
-
-Depois da atualização, confirme também:
-
-- login da Sarah;
-- cadastro de clientes;
-- briefings públicos;
-- agenda e reuniões;
-- calendário de conteúdos;
-- aprovação pública;
-- Storymaker;
-- logout e proteção das páginas internas.
+Sem Supabase, o módulo salva dados no navegador por `localStorage`. Os dados não são compartilhados entre aparelhos nesse modo.

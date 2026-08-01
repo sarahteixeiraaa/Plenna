@@ -1,33 +1,23 @@
-# Changelog — Plenna
+# Changelog
 
-## v1.7.0 — Portal do Cliente
+## v1.8.0 — Biblioteca Criativa e Central de Arquivos
 
 ### Adicionado
 
-- Portal privado por cliente;
-- Token exclusivo e código de acesso protegido;
-- Ativação e desativação do portal;
-- Mensagem personalizada de boas-vindas;
-- Registro do último acesso;
-- Dashboard público responsivo;
-- Conteúdos com acesso à aprovação;
-- Agenda compartilhada;
-- Área de briefing;
-- Central de arquivos por links;
-- Pendências com prazo, prioridade, resposta e conclusão;
-- Administração interna de portais;
-- Funções RPC públicas com validação de acesso;
-- Tabelas `client_portal_tasks` e `client_portal_files`.
+- Central funcional de materiais por cliente;
+- Tipos, categorias, tags e favoritos;
+- Controle de visibilidade no Portal do Cliente;
+- Biblioteca criativa interna;
+- Modelos de roteiro, gancho, legenda, CTA, Stories e mensagens;
+- Botão para copiar textos;
+- Botão `Usar com cliente`;
+- Criação automática de pauta no módulo Conteúdos;
+- Contador de reutilizações;
+- Persistência no Supabase e modo demonstração.
 
-### Segurança
+### Alterado
 
-- Código armazenado com hash `pgcrypto`;
-- Dados internos não são retornados ao portal;
-- Funções públicas filtram todos os registros pelo cliente autenticado pelo token e código;
-- RLS preservada para a área interna da Sarah;
-- Rota `/cliente/[token]` liberada no proxy sem liberar as páginas administrativas.
-
-### Observação
-
-- Arquivos são compartilhados por links nesta versão;
-- Upload direto para armazenamento será tratado em uma etapa futura.
+- O menu `Arquivos` foi renomeado para `Biblioteca`;
+- O Portal do Cliente passa a exibir somente materiais autorizados;
+- A página antiga demonstrativa de arquivos foi substituída por um módulo funcional;
+- Versão do projeto atualizada para `0.8.0`.
