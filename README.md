@@ -110,3 +110,6 @@ Upload direto poderá ser adicionado futuramente com Supabase Storage, incluindo
 ## Modo demonstração
 
 Sem Supabase, o módulo salva dados no navegador por `localStorage`. Os dados não são compartilhados entre aparelhos nesse modo.
+
+
+Integração Vercel reativada.
